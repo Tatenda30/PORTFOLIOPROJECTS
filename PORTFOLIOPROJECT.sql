@@ -3,15 +3,23 @@ FROM CovidCases
 ORDER BY 3,4
 
 --LOOKING AT TOTAL CASES VS TOTAL DEATHS
+
+
+
+SELECT location ,COUNT (total_cases) AS TotalCasesByContinent
+FROM PotifolioProject.dbo.CovidCases 
+WHERE location IN ('Asia','Africa','Europe','North America','South America','Antarctica','Oceania')
+GROUP BY location
+ORDER BY location
+
 --SHOWS THE LIKELYHOOD OF DYING IF YOU CONTRACT COVID IN YOUR COUNTRY
 
-
-SELECT location, date, total_cases, new_cases, total_deaths, (new_cases/total_cases)*100 AS InfectionRate
+SELECT location, date, total_cases, new_cases, total_deaths, (new_cases/total_deaths)*100 AS DeathRate
 FROM PotifolioProject.dbo.CovidCases 
 WHERE location LIKE '%Zimbabwe%'
 ORDER BY 1,2
 
-SELECT location, date, total_cases, new_cases, total_deaths, (new_cases/total_cases)*100 AS DeathRate
+SELECT location, date, total_cases, new_cases, total_deaths, (new_deaths/total_deaths)*100 AS DeathRate
 FROM PotifolioProject.dbo.CovidCases 
 WHERE location LIKE '%Zimbabwe%'
 ORDER BY 1,2
@@ -140,11 +148,15 @@ AND cas.date=vac.DATE_UPDATED
 WHERE location NOT IN ('Asia','Africa','Europe','North America','South America','Antarctica','Oceania','World','Higher Income','Higher Middle Income','Lower Income','Lower Middle Inicome')
 
 
-CREATE VIEW InfectionRate AS
-SELECT location, date, total_cases, new_cases, total_deaths, (new_cases/total_cases)*100 AS InfectionRate
+CREATE VIEW TotalDeathsInTheWORLD AS
+SELECT location ,COUNT (total_deaths) AS TotalDeathsInTheWORLD
 FROM PotifolioProject.dbo.CovidCases 
-WHERE location LIKE '%Zimbabwe%'
---ORDER BY 1,2
+WHERE location IN ('World')
+GROUP BY location
+ORDER BY location
+
+
+
 
 
 
