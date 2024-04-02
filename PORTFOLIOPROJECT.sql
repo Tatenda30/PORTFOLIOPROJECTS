@@ -6,11 +6,25 @@ ORDER BY 3,4
 
 
 
-SELECT location ,COUNT (total_cases) AS TotalCasesByContinent
+SELECT location ,COUNT (total_deaths) AS TotaldeathsByContinent,COUNT (total_cases) AS TotalcasessByContinent
 FROM PotifolioProject.dbo.CovidCases 
 WHERE location IN ('Asia','Africa','Europe','North America','South America','Antarctica','Oceania')
 GROUP BY location
 ORDER BY location
+
+SELECT location ,COUNT (total_cases) AS TotalCasesInTheWORLD
+FROM PotifolioProject.dbo.CovidCases 
+WHERE location IN ('World')
+GROUP BY location
+ORDER BY location
+
+SELECT location ,COUNT (total_deaths) AS TotalDeathsByINCOME,COUNT (total_cases) AS TotalCaseSByINCOME
+FROM PotifolioProject.dbo.CovidCases 
+WHERE location IN ('Higher Income','Higher Middle Income','Lower Income','Lower Middle Inicome','High income','Upper middle income','Lower middle income' )
+GROUP BY location
+ORDER BY location
+
+
 
 --SHOWS THE LIKELYHOOD OF DYING IF YOU CONTRACT COVID IN YOUR COUNTRY
 
@@ -25,9 +39,10 @@ WHERE location LIKE '%Zimbabwe%'
 ORDER BY 1,2
 
 --looking at countries with highest infection rate
-SELECT date, location, max (total_cases) AS TotalCasesCount
+SELECT  location, max (total_cases) AS TotalCasesCount ,max(total_deaths) AS TotalDeathsCount
 FROM PotifolioProject.dbo.CovidCases 
-GROUP BY date,location
+WHERE location NOT IN ('Asia','Africa','Europe','North America','South America','Antarctica','Oceania','World','Higher Income','Higher Middle Income','Lower Income','Lower Middle Inicome','High income','Upper middle income','Lower middle income' )
+GROUP BY location
 ORDER BY TotalCasesCount DESC
 
 
@@ -42,6 +57,23 @@ FROM PotifolioProject.dbo.CovidCases
 WHERE location NOT IN ('Asia','Africa','Europe','North America','South America','Antarctica','Oceania','World','Higher Income','Higher Middle Income','Lower Income','Lower Middle Inicome')
 GROUP BY date,location
 ORDER BY date
+
+--infection rate and death rate
+
+SELECT POP.location,Population,total_cases,total_deaths,(total_cases*100000/Population)AS Infectionrateper100K,(total_deaths*100000/Population)AS deathrateper100k
+FROM PotifolioProject.dbo.POPULATION1 POP
+JOIN PotifolioProject.dbo.CovidCases COV
+ON POP.location=COV.location
+ORDER BY POP.location;
+
+SELECT location,Population,TotalCasesCount,TotalDeathsCount,(CONVERT(bigint,TotalCasesCount)*100000/Population) AS Infectionrateper100K,(CONVERT(bigint,TotalDeathsCount)*100000/Population )AS deathrateper100k
+FROM PotifolioProject.dbo.POPULATION1 
+ORDER BY location;
+
+
+
+
+
 
 --Cummulative totals
 
@@ -111,13 +143,19 @@ AND cas.date=vac.DATE_UPDATED
 -
 --vaccination progress over time
 
---SELECT date,location,TOTAL_VACCINATIONS, 
---TOTAL_VACCINATIONS -LAG(TOTAL_VACCINATIONS,1) OVER (PARTITION BY location ORDER BY date) AS Dailyvaccinationincrease
---FROM PotifolioProject.dbo.CovidCases cas
---JOIN PotifolioProject.dbo.vaccination vac
---ON cas.location=vac.COUNTRY
---AND cas.date=vac.FIRST_VACCINE_DATE
---ORDER BY date;
+SELECT *
+FROM vaccination VAC
+JOIN POPULATION1 POP
+ON VAC.COUNTRY=POP.location
+
+--Percentage of people vaccinated
+
+SELECT location,Population,TOTAL_VACCINATIONS,(TOTAL_VACCINATIONS/Population)*100  AS Percentagevaccinated
+FROM PotifolioProject.dbo.POPULATION1 POP
+JOIN PotifolioProject.dbo.vaccination VAC
+ON POP.location=VAC.COUNTRY
+ORDER BY POP.location
+
 
 --Coparative Analysis
 
@@ -137,6 +175,18 @@ JOIN PotifolioProject.dbo.vaccination vac
 ON cas.location=vac.COUNTRY
 AND cas.date=vac.DATE_UPDATED
 
+DROP Table if exists #PercentPopulationVaccinated
+Create Table #PercentPopulationVaccinated
+(
+Location nvarchar(255),
+Date datetime,
+Population numeric,
+New_vaccinations numeric,
+RollingPeopleVaccinated numeric
+)
+
+
+
 
 CREATE VIEW sevendayrollingavgvaccination AS
 SELECT date,location,AVG(new_cases)OVER (PARTITION BY location ORDER BY date ROWS BETWEEN 6 PRECEDING AND CURRENT ROW) AS sevendayrollingavgnewdeaths,
@@ -148,15 +198,10 @@ AND cas.date=vac.DATE_UPDATED
 WHERE location NOT IN ('Asia','Africa','Europe','North America','South America','Antarctica','Oceania','World','Higher Income','Higher Middle Income','Lower Income','Lower Middle Inicome')
 
 
-CREATE VIEW TotalDeathsInTheWORLD AS
-SELECT location ,COUNT (total_deaths) AS TotalDeathsInTheWORLD
-FROM PotifolioProject.dbo.CovidCases 
-WHERE location IN ('World')
-GROUP BY location
-ORDER BY location
-
-
-
+CREATE VIEW Deathrateper100k AS
+SELECT location,Population,TotalCasesCount,TotalDeathsCount,(CONVERT(bigint,TotalCasesCount)*100000/Population) AS Infectionrateper100K,(CONVERT(bigint,TotalDeathsCount)*100000/Population )AS deathrateper100k
+FROM PotifolioProject.dbo.POPULATION1 
+ORDER BY location;
 
 
 
